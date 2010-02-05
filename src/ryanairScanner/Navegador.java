@@ -1,0 +1,30 @@
+package ryanairScanner;
+
+import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.widgets.Composite;
+
+public class Navegador extends Browser {
+	private boolean ocupado= false;
+	private Vuelo vueloCapturando= null;
+	
+    public Navegador(Composite parent, int style) {
+		super(parent, style);
+	}
+
+	public boolean isOcupado() {
+		return ocupado;
+	}
+	public void setOcupado(boolean ocupado) {
+		this.ocupado = ocupado;
+	}
+	public Vuelo getVueloCapturando() {
+		return vueloCapturando;
+	}
+	public void setVueloCapturando(Vuelo vueloCapturando) {
+		this.vueloCapturando = vueloCapturando;
+	}
+	public boolean isVueloCapturando(Vuelo vueloCapturando) {
+		return vueloCapturando != null;
+	}
+
+}

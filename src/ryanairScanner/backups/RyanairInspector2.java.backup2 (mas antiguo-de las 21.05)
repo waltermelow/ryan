@@ -1,0 +1,484 @@
+/*******************************************************************************
+ * Copyright (c) 2000, 2004 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+package calculadora;
+
+/*
+ * Browser example snippet: modify DOM (executing javascript)
+ *
+ * For a list of all SWT example snippets see
+ * http://www.eclipse.org/swt/snippets/
+ * 
+ * @since 3.1
+ */
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.eclipse.swt.*;
+import org.eclipse.swt.browser.*;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
+
+class Vuelo implements Comparable<Vuelo>{
+	Calendar fecha;
+	private String origen;
+	private String destino;
+	
+	public Vuelo(Calendar fecha, String origen, String destino){
+		this.origen= origen;
+		this.destino= destino;
+		this.fecha= fecha;
+	}
+	
+	public Calendar getFecha() {
+		return fecha;
+	}
+	public String getOrigen() {
+		return origen;
+	}
+	public String getDestino() {
+		return destino;
+	}
+	public void setFecha(Calendar fecha) {
+		this.fecha = fecha;
+	}
+	public void setOrigen(String origen) {
+		this.origen = origen;
+	}
+	public void setDestino(String destino) {
+		this.destino = destino;
+	}
+
+	@Override
+	public int compareTo(Vuelo v) {
+		int resultado = 0;
+		if(this.origen.equals(v.getOrigen())){
+			if(this.destino.equals(v.getDestino())){
+				if(this.fecha.equals(v.getFecha())){
+					resultado=0;
+				}else resultado= this.fecha.compareTo(v.getFecha());
+			}else resultado= this.destino.compareTo(v.getDestino());
+		}else resultado= this.origen.compareTo(v.getOrigen());
+		
+		return resultado;
+	}
+	@Override
+	public String toString() {
+		return  origen + "  ->\t  " + destino + "  ::\t  " + fecha.getTime();
+	}
+	@Override
+	public boolean equals(Object o) {
+		Vuelo v= (Vuelo)o;
+		return this.fecha.equals(v.getFecha()) && this.origen.equals(v.getOrigen())  && this.destino.equals(v.getDestino()) ;
+	}
+	
+}
+
+
+public class RyanairInspector2{
+	
+	boolean ocupado= false;
+	static int numPantalla = 0;
+	String origenActual= "";
+	String destinoActual= "";
+	Calendar fechaActual;
+	
+	final static String rutaActual= System.getProperty("user.dir")+"\\bin\\calculadora\\";
+	final static String nomFichConsultas= "dataConsultas.txt";
+	
+	//Calcula la posicion en el "<select" del "Valladolid" (funciona bien, pero mu lioso, mejor con jQuery)
+	//Mejor con option[INDICE].text	 Specifies the text for the option.
+	//			option[INDICE].value Specifies the value for the option
+	//y RegEx en javascript: RegExp.test(string);   String.match(pattern);
+	//http://www.javascriptkit.com/javatutors/redev3.shtml
+	
+	//Supongo q el submit lo podremos hacer siempre con "document.forms[0].submit();" (no lo he probado)
+	final String jsSubmit= "document.getElementById('AvailabilitySearchInputFRSearchView_ButtonSubmit').click();";
+	final String jsSubmit2= "document.getElementById('AvailabilityInputFRSelectView_ButtonSubmit').click();";
+	
+	final String jsVueloIda= "document.getElementById('AvailabilitySearchInputFRSearchView_OneWay').click();" +
+									//Origen
+									"var posicion;" +
+									"for(var i in Stations){" +
+										"if(Stations[i].name=='%ORIGEN%') {" +
+											//"alert(Stations[i].code);" +
+											"cont=0;" +
+											"for(var codStaAct in SortedStations){" +
+												"if(SortedStations[cont] == Stations[i].code){" +
+													"posicion=cont;" +
+													//"alert('Posicion='+cont);" +
+													"break;" +
+												"}" +
+												"cont++;" +
+											"} " +
+									"} };" +
+									
+									"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketOrigin1').options[posicion+1].selected=true;" +
+									
+									//Destino:
+									"for(var i in Stations){" +
+										"if(Stations[i].name=='%DESTINO%') {" +
+											//"alert(Stations[i].code);" +
+											"cont=0;" +
+											"for(var codStaAct in SortedStations){" +
+												"if(SortedStations[cont] == Stations[i].code){" +
+													"posicion=cont;" +
+													//"alert('Posicion='+cont);" +
+													"break;" +
+												"}" +
+												"cont++;" +
+											"} " +
+									"} };" +
+									
+									"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketDestination1').options[posicion+1].selected=true;" +
+
+									//Dia
+									"var listaDia= document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketDay1');" +
+									"for (var i=0; i<listaDia.options.length; i++){" +
+										"if(listaDia.options[i].value=='%DIA%') listaDia.options[i].selected= true;" +
+									"}" +
+									//
+									//"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketDay1').options[28].selected=true;" +
+									
+									//Año-Mes
+									"var listaAnnoMes= document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketMonth1');" +
+									"for (var i=0; i<listaAnnoMes.options.length; i++){" +
+										"if(listaAnnoMes.options[i].value=='%ANNOMES%') listaAnnoMes.options[i].selected= true;" +
+									"}";
+									//"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketMonth1').options[4].selected=true;";
+	
+	/*String buscaRadios= "var inputes = document.getElementsByTagName('input');" +
+							"for(var i=0;i<inputes.length; i++){" +
+							" if (inputes[i].type=='radio') {alert(inputes[i].onclick); inputes[i].click();inputes[i].checked=true;}" +
+							"}";*/	
+	
+	/*final String jsSelecVuelo = "document.getElementById('AvailabilitySearchInputFRSearchView_OneWay').checked = true;\r\n"+
+								"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketOrigin1')[2].selected=true;\r\n"+
+								"document.getElementById('AvailabilitySearchInputFRSearchView_DropDownListMarketDestination1')[1].selected=true;alert('zagna');\r\n"+
+								"document.getElementById('AvailabilitySearchInputFRSearchView_ButtonSubmit').click();";*/
+
+	
+	
+	/*****************************  M A I N  *************************************/
+	public static void main(String [] args) {
+		
+		try {
+			RyanairInspector2GUI ryanairinspector2gui= new RyanairInspector2GUI();
+			//ryanairinspector2gui.open();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/******************************************************************/
+	//Compone el codigo JS a ejecutar
+	private String componJS(String Origen, String Destino, Calendar fecha) {
+		//Ej: "Valladolid" - "Londres Stansted" "16" "2009-09"       (yyyy-MM-dd)
+		DateFormat df1 = new SimpleDateFormat("dd");
+		DateFormat df2 = new SimpleDateFormat("yyyy-MM");
+		
+		/*
+		System.out.println(df1.format(fecha.getTime()));
+		System.out.println(df2.format(fecha.getTime()));
+		*/
+		if(Destino=="Bruselas (Charleroi)")System.out.println(df1.format(fecha.getTime()));
+		if(Destino=="Bruselas (Charleroi)")System.out.println(df2.format(fecha.getTime()));
+		
+		
+		return jsVueloIda.replace("%ORIGEN%", Origen).replace("%DESTINO%", Destino).replace("%DIA%", df1.format(fecha.getTime())).replace("%ANNOMES%", df2.format(fecha.getTime()));
+		
+	}
+	
+	
+	/******************************************************************/
+	//Gestiona el evento Fin de la carga de la pagina del BROWSER
+	protected boolean gestionaBrowserFin(Browser brw) {
+		/*if(!ocupado){
+			ocupado= true;
+			
+			//PRUEBA - BORRAR Calendar
+			Calendar c= Calendar.getInstance();
+			c.set(2009, 6-1, 15);
+			//Fin PRUEBA
+			
+			origenActual= "Valladolid"; destinoActual= "Londres Stansted"; fechaActual= c;
+			capturaVuelo(brw, "Valladolid", "Londres Stansted", c);
+			System.out.println("Fin de capturaVuelo() -> 1");
+			
+			numPantalla=0;
+			origenActual= "Valladolid"; destinoActual= "Bruselas (Charleroi)"; fechaActual= c;
+			capturaVuelo(brw, "Valladolid", "Bruselas (Charleroi)", c);
+			System.out.println("Fin de capturaVuelo() -> 2");
+			
+			numPantalla=0;
+			origenActual= "Valladolid"; destinoActual= "Milán"; fechaActual= c;
+			capturaVuelo(brw, "Valladolid", "Milán", c);
+			System.out.println("Fin de capturaVuelo() -> 3");
+			
+			ocupado= false;
+		}else {
+			capturaVuelo(brw, origenActual, destinoActual, fechaActual);
+		}*/
+		
+		
+		//La primera vez actualizamos los campos
+		//PRUEBA - BORRAR Calendar
+		Calendar c= Calendar.getInstance();
+		c.set(2009, 6-1, 15);
+		//Fin PRUEBA
+		
+		System.out.println("-- Empieza lectura fichero --");
+		TreeSet<Vuelo> tPrueba = leerFicheroDatosConsultaVuelos(rutaActual + nomFichConsultas);
+		for (Vuelo vuelo : tPrueba) {
+			System.out.println(vuelo.toString());
+		}
+		System.out.println("-- Termina lectura fichero --");
+		
+		
+		if(!ocupado) {
+			origenActual= "Valladolid"; destinoActual= "Londres Stansted"; fechaActual= c;
+			ocupado= true;
+		}
+		if(capturaVuelo(brw, origenActual, destinoActual, fechaActual)) {
+			
+			c.set(2009, 7, 30);
+			origenActual= "Valladolid"; destinoActual= "Bruselas (Charleroi)"; fechaActual= c;
+			brw.clearSessions(); //Borra todas las cookies de la sesion 
+			gestionaBrowserFin(brw);
+			//numPantalla=0;
+			//gestionaBrowserFin(brw);
+			//brw.setUrl("http://www.bookryanair.com/SkySales/FRSearch.aspx?culture=ES-ES&pos=HEAD");
+		}
+		
+		
+		return true;
+	}
+	
+	
+	/******************************************************************/
+	//TODO hacer ==0 la carga de ryanari.com y quitarlo del GUI
+	protected boolean capturaVuelo(Browser brw, String Origen, String Destino, Calendar fecha) {
+		boolean resultado = false;
+		
+		if(numPantalla==0){
+			if(!brw.setUrl("http://www.bookryanair.com/SkySales/FRSearch.aspx?culture=ES-ES&pos=HEAD")){
+				System.out.println("Error al caragar la página principal de busqueda de vuelos Ryanair.");
+			}else{
+				numPantalla++;
+			}
+			System.out.println("Fin numPantalla = 0 con "+Destino);
+				
+		}
+		else if(numPantalla==1){
+			
+			if (!brw.execute(componJS(Origen, Destino, fecha))) {
+				System.out.println("ERROR: ejecutando el javascript de la selección del vuelo.");
+			}else if(!brw.execute(jsSubmit)){
+					System.out.println("ERROR: ejecutando el submit.");
+				}else{
+					//Se ha ejecutado CORRECTAMENTE
+					numPantalla++;
+					//Obtenemos los Calendar del fechas.txt con sus intervalos de fechas
+					//Llamamos a componJS por cada fecha
+					
+				}
+			System.out.println("Fin numPantalla = 1 con "+Destino);
+			
+			
+		}else if(numPantalla==2){
+			
+			
+			if(!brw.execute(jsSubmit2)){
+				System.out.println("Error al ejecutar el submit de la pantalla: "+(numPantalla+1));
+			}else{
+				//Se ha ejecutado CORRECTAMENTE
+				numPantalla++;
+			}
+			System.out.println("Fin numPantalla = 2 con "+Destino);
+			
+			
+		}else if(numPantalla==3){
+			System.out.println("----------");
+			Pattern pat= Pattern.compile("Importe total del vuelo.*[0-9]*(,|\\.)[0-9]*(| )(EUR|L|€|GBP)");
+			Matcher m= pat.matcher(brw.getText().replaceAll("[\r\n]", "")); //Le quitamos los retornos de carro, para que realice bien la busqueda
+			
+			//Buscamos cadenas coincidentes con la RegEx
+			int contador= 0;
+			while (m.find()){
+				//Si hay siguiente patron encontrado
+				contador++;
+				//System.out.println(m.group());
+				Pattern pat2= Pattern.compile("[0-9]*(,|\\.)[0-9]*(| )(EUR|L|€|GBP)");
+				Matcher m2= pat2.matcher(m.group());
+				while (m2.find()) {
+					System.out.println(m2.group());
+				}
+			}
+			
+			//Informamos de errores
+			if(contador==0) System.out.println("ERROR: no se ha encontrado importe alguno en la página.");
+			else if(contador!=1) System.out.println("ERROR: se han encontrado más importes ("+m.groupCount()+") de los esperados en la página.");
+			
+			resultado= true;
+			
+			//numPantalla++;
+			numPantalla= 0;
+			System.out.println("Fin numPantalla = 3 con "+Destino);
+			
+		}else{
+			brw.execute("alert('Completado paso "+numPantalla+"');");
+		}
+	
+		return resultado;
+	}
+	
+	/******************************************************************/
+	private static Calendar getFecha(String annoMes, String dia){
+		return getFecha(annoMes+"-"+dia);
+	}
+	
+	
+	/******************************************************************/
+	//Convierte String fechas tipo "yyyy-MM-dd" a --> Calendar
+	public static Calendar getFecha(String annoMesDia){
+		
+		//http://www.java2s.com/Code/JavaAPI/java.text/DateFormatparseStringdateString.htm
+		//http://www.exampledepot.com/egs/java.text/FormatDate.html?l=rel
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		Date d= null;
+		try {
+			d = df.parse(annoMesDia);
+		} catch (ParseException e) {
+			System.out.println(e.getMessage()); //e.printStackTrace();
+		}
+		Calendar c= Calendar.getInstance();
+		c.setTime(d);
+		return c;
+		
+		
+	}
+	/******************************************************************/
+	private static TreeSet<Calendar> getFechasDesdeHasta(Calendar fDesde, Calendar fHasta){
+		TreeSet<Calendar> ts= new TreeSet<Calendar>();
+		Calendar fDesdeAux= (Calendar)fDesde.clone();
+		
+		//Incrementamos la fechaDesde hasta fechaHasta y las guardamos
+		while(fDesdeAux.before(fHasta) || fDesdeAux.equals(fHasta)){
+			ts.add((Calendar)fDesdeAux.clone());
+			fDesdeAux.add(Calendar.DATE, 1);
+		}
+		return ts;
+	}
+	
+	/******************************************************************/
+	private static void addFechaFichero(Calendar fecha) {
+		
+	}
+	
+	/******************************************************************/
+	private static void addFechasFichero(Set fechas) {
+		
+	}
+	
+	
+	/******************************************************************/
+	//Lee el fichero plano de fechas y lo traduce y devuelve un --> Conjunto ordenado de fechas (Calendar)
+	//Formato del fichero: Cada linea esta compuesta a) ORIGEN|DESTINO|FECHA
+	//												 b) ORIGEN|DESTINO|FECHA_DESDE|FECHA_HASTA
+	//Formato fechas: yyyy-MM-dd Ej: 2009-02-28
+	private static TreeSet<Vuelo> leerFicheroDatosConsultaVuelos(String fichero) {
+		File f = new File(fichero);
+		TreeSet<Vuelo> tsVuelos = new TreeSet<Vuelo>();
+		if (f.exists()) {
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(f));
+				String linea;
+				while ((linea = br.readLine()) != null) {
+					//Ej: 2009-02-28
+					String[] subLinea= linea.split("\\|");
+					if(subLinea.length==3){
+						tsVuelos.add( new Vuelo(getFecha(subLinea[2]), subLinea[0], subLinea[1]) );
+					}else if (subLinea.length==4){
+						TreeSet<Calendar> fechasDesdeHasta = getFechasDesdeHasta(getFecha(subLinea[2]), getFecha(subLinea[3]));
+						for (Calendar cal : fechasDesdeHasta) {
+							tsVuelos.add( new Vuelo(cal, subLinea[0], subLinea[1]) );
+						}
+					}else System.out.println("ERROR leerFicheroDatosConsultaVuelos(): fechas mal formadas en el fichero");
+				}
+
+				//Cerramos el fichero
+				br.close();
+				//System.out.println(tsFechas.toString());
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}else{
+			System.out.println("El fichero de fechas no existe!");
+		}
+
+		return tsVuelos;
+	}
+
+
+}
+
+
+/* CREAR UN FICHERO
+		// Creamos el objeto que encapsula el fichero
+	   File fichero = new File("c:\\temp\\miFichero.txt");
+
+	   try {
+	      // A partir del objeto File creamos el fichero físicamente
+	      if (fichero.createNewFile())
+	        System.out.println("El fichero se ha creado correctamente");
+	      else
+	        System.out.println("No ha podido ser creado el fichero");
+	    } catch (IOException ioe) {
+	      ioe.printStackTrace();
+	    }
+ */
+
+
+//PRUEBA ORDENACION DE LA CLASE Vuelo
+/*
+Calendar c= Calendar.getInstance();
+c.set(2009, 6-1, 15);
+Calendar c2= Calendar.getInstance();
+c2.set(2009, 4-1, 1);
+Vuelo v1 = new Vuelo(c2, "Valladolid", "Londres");
+Vuelo v2 = new Vuelo(c, "Pucela", "Londres");
+Vuelo v3 = new Vuelo(c, "A", "Londres");
+Vuelo v4 = new Vuelo(c, "Pucela", "Dinamearca");
+Vuelo v5 = new Vuelo(c, "Pucela", "Dinamearca");
+TreeSet<Vuelo> tsv = new TreeSet<Vuelo>();
+tsv.add(v1);
+tsv.add(v2);
+tsv.add(v3);
+tsv.add(v4);
+System.out.println("Son iguales:" + v4.equals((Vuelo)v5));
+
+for (Vuelo vuelo : tsv) {
+	System.out.println(vuelo.toString());
+}
+*/

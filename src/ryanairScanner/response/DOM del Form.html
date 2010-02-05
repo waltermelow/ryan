@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"><html><head><META http-equiv="Content-Type" content="text/html; charset=utf-8"><title>Ryanair.com</title><link rel="stylesheet" type="text/css" href="css/Ryanair/Standard.css" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><link rel="stylesheet" type="text/css" href="css/Ryanair/datePicker.css" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><script type="text/javascript" src="/data/js/skysales_695740ABF825CC09D79B45E3498BA96D.js"></script><script type="text/javascript" src="/data/js/skysales_380278900570CC37D502CD45A83E9FD2.js"></script><script type="text/javascript" language="javascript" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt">
+      Date.dayNames=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+      Date.monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      if (typeof jQuery != 'undefined') {
+        $.dpText={
+          TEXT_PREV_YEAR:'Año anterior',
+          TEXT_PREV_MONTH:'Mes anterior',
+          TEXT_NEXT_YEAR:'Año siguiente',
+          TEXT_NEXT_MONTH:'Mes siguiente',
+          TEXT_CLOSE:'Cerrar',
+          TEXT_CHOOSE_DATE:' '
+        };
+      }
+      
+      var datePickerFormat='yyyy-mm-dd';
+      var datePickerDelimiter='-';
+      Date.format=datePickerFormat;
+      //$.datePicker.setDateFormat(datePickerFormat, datePickerDelimiter);
+    </script></head><body><noscript xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><p class="error">
+      ERROR:
+      Este servicio utiliza Javascript, que está desactivado.
+      Haga clic <a href="activateJavascript.htm">aquí</a> para obtener información sobre cómo activarlo.
+    </p></noscript><form method="post" action="FRSelect.aspx" id="SkySales" ><div><input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value=""><input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value=""><input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUBMGRkg4UKvNNb1NbM14/2n9zUxhNQ++A="></div><div id="header"><div id="blu"><a href="http://www.ryanair.com"><img src="Images/Ryanair/logoyelbg.gif" width="228" height="42" alt="Página de inicio de Ryanair.com" title="Página de inicio de Ryanair.com"></a></div><div id="yel" onclick="this.firstChild.innerHTML='WWW153 2009-03-06 15:36:35 regl2t1fcoiza0jx|289087026 ';"><span title="DNS: www153 62.73.129.159 10.37.1.153 "> </span>Buscar » <b>Seleccionar</b> » Confirmar » Servicios » Pago » Itinerario</div><input type="hidden" id="sysdate" value="2009-03-06"><input type="hidden" id="systime" value="15:36:35"></div><div id="body"><div id="wrapper"><div id="error"><input type="hidden" name="errorlist" value=""><script language="Javascript" type="text/javascript">
+      $(document).ready(function(){
+        var msg = "";          
+        
+        if (msg.length  > 0) {
+          msg = msg.replace(/([\.|:])\s*([^\.]+)/g,"$1``$2") 
+          var msg_array = msg.split("``");
+          var newMsg = "";
+          for (var idx = 1; idx < msg_array.length + 1; idx++){
+            if (newMsg.indexOf(msg_array[msg_array.length - idx]) == -1)  { 
+              newMsg = msg_array[msg_array.length - idx] + "\n" + newMsg ;
+            }
+          }
+          alert(newMsg);
+        }
+      });
+    </script></div><div id="main"><p><b>A continuación, le mostramos los vuelos y las tarifas disponibles para las fechas solicitadas.</b></p><ol><li>Haga clic en el nombre de la tarifa para consultar las normas de tarifas.</li><li>Haga clic sobre un avión o un punto adyacente para seleccionar el vuelo que desee.</li><li>Al seleccionar un vuelo, se muestra el precio del vuelo, incluidas las tasas, tarifas y cuotas en el cuadro de tarifas de la derecha.</li></ol><p><a href="javascript:infoWin('trvfee',0,0,'EN')"><b>Para una lista completa de los recargos de Ryanair pincha aquí</b></a></p><script language="javascript" type="text/javascript" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt">
+    function setTabIndex(marketIndex, index){
+      var fld=['',
+      ''];
+      var i=marketIndex==1?0:1;
+      document.getElementById(fld[i]).value = index;
+      postBack();
+    }
+    function postBack(){
+      ;
+    }
+    var pleaseWaitMessage = 'Por favor, espere…';
+    var marketHeaders = ['','Ida','Vuelta'];
+
+    function feesTaxes(fltKeys,names){
+      var mkts=[];
+      for(var k in names){
+        var market=names[k].charAt(names[k].length-1);
+        mkts.push(market);
+        $("div#taxAndFeeInclusiveDivBody"+market).css('background-color','#A3AECC').find(".hdr").html('<span>'+pleaseWaitMessage+'</span>').css('background-color','#FFFF99')
+        .ajaxError(function(evt,req,sett){
+          $(this).html('<span>Unavailable... try again!</span>').css('background-color','#FFBBBB');
+        });
+      }
+      $.get("FRTaxAndFeeInclusiveDisplay-resource.aspx",
+        {'flightKeys':fltKeys.join('+++'), 'numberOfMarkets':fltKeys.length, 'keyDelimeter':'+++'},
+        function(data,stat){
+          $htm=$(data);
+          for(var i=0,ml=mkts.length;i<ml;i++)
+            $("div#taxAndFeeInclusiveDivBody"+mkts[i]).css('background-color','#BFD6F7').html('<p class="hdr">'+marketHeaders[mkts[i]]+'</p>'+$($htm[i]).html());
+        }
+      );
+    }
+    function selFlight(o){
+      if(!o) return false;
+      $(o).parents('table:first').find("div[@class^='planeImg']").css('background-position','top left');
+      var tro=$(o).parents('tr:first');
+      $("div[@class^='planeImg']:first",tro).css('background-position','top right');
+      $("input[@type='radio']",tro).attr('checked','true');
+      var pval=[],pname=[],doJson=true;
+      var A=parseIDDate(tro.attr("id"));
+      var outDTarr=new Date(A[1],A[2],A[3],A[4]+1,A[5],A[6]);
+      $(".avlLst table").each(function(){
+        var $chkbs=$(this).find("input[@type='radio'][@name*='market']");
+        if($chkbs.size()==0) return;
+        if(A[0]==1 && $chkbs.is("input[@name*='market2']")){
+          $chkbs.each(function(){
+            var troB=$(this).parents('tr:first');
+            var B=parseIDDate(troB.attr("id"));
+            var inDTdep=new Date(B[1],B[2],B[3],B[4],B[5],B[6]);
+            if(outDTarr>=inDTdep){
+              $(this).attr('disabled', 'disabled').attr('checked','');
+              $("div[@class^='planeImg']", troB).css('background-position','top left').attr('disabled', 'disabled');
+            }else {
+              $(this).attr('disabled', '');
+              $("div[@class^='planeImg']", troB).attr('disabled', '');
+            }
+          });
+        }
+        var $chkb=$chkbs.filter(':checked');
+
+        if($chkb.size()!=0) {pval.push($chkb.val());pname.push($chkb.attr('name'));}
+        else if($chkbs.is(':enabled')){
+          if(A[0]==1) $chkbs.filter(':enabled:first').trigger('click');
+          doJson=false;
+        } else $("div[@id*='taxAndFeeInclusiveDivBody']", this.parent).find("*:not(.hdr)").remove();
+      });
+      if(doJson) feesTaxes(pval,pname);
+    }
+    function parseIDDate(s){
+      var a=s.split('_');
+      for(var k in a) a[k]=parseInt(a[k].replace(/^0([0-9]+)/,'$1'));
+      return a;
+    }
+
+    var nbrMarkets=1;
+    
+    var dateRanges=[[],[new Date(2009,2,29), new Date(2009,2,29)]];
+    var localization={
+      inPast:'No es posible realizar búsquedas anteriores a la fecha de hoy.',
+      datesOverlap:'El rango de fechas del vuelo de ida no puede solaparse con el rango de fechas del vuelo de vuelta',
+      timesOverlap:'Vuelva a comprobar los vuelos seleccionados\nLos vuelos posteriores al primero deben SALIR al menos 1 hora después de LLEGAR cada vuelo anterior.',
+      bookToday:'Sentimos comunicarle que, por motivos de seguridad, si desea reservar un vuelo que salga hoy,\ndebe realizar la reserva a través del CENTRO DE LLAMADAS LOCAL DE RYANAIR o bien en el aeropuerto.'
+    };
+    function checkDate(market,days){
+      var flexi=Math.abs(days)==7?true:false;
+      var idx=days>0?1:0;
+      var today=new Date(), tomorrow=new Date(); tomorrow.addDays(1);
+      if(idx==0 && dateRanges[market][idx] <= tomorrow){
+        alert(localization['inPast']);
+        return false;
+      }
+      if(nbrMarkets > 1){
+        var overlap=false;
+        if(market==2 && idx==0 && dateRanges[market][idx] <= dateRanges[market-1][idx]) overlap=true;
+        else if(market==1 && idx==1 && dateRanges[market][idx] >= dateRanges[market+1][idx]) overlap=true;
+        if(overlap){
+          alert(localization['datesOverlap']);
+          return false;
+        }
+      }
+      return true;
+    }
+    function checkTimes(){
+      if(nbrMarkets < 2) return true;
+      var DA=[0,0];
+      $(".avlLst table input[@type='radio']:checked").each(function(){
+        var A=parseIDDate($(this).parents("tr:first").attr("id"));
+        DA[A[0]-1]=new Date(A[1],A[2],A[3],A[4],A[5],A[6]);
+      });
+      $("input[@id*='oTime']").each(function(){
+        var A=parseIDDate($(this).val());
+        DA[A[0]-1]=new Date(A[1],A[2],A[3],A[4],A[5],A[6]);
+      });
+      if((DA[1]-DA[0]) <= (60*60*1000)){
+        alert(localization['timesOverlap']);
+        return false;
+      }
+      return true;
+    }
+
+    $(document).ready(function(){
+      // This could probably be cleaned up
+      $("a[@id*='LinkButtonNextDay1']").click(function(){return checkDate(1,1);});
+      $("a[@id*='LinkButtonNextWeek1']").click(function(){return checkDate(1,7);});
+      $("a[@id*='LinkButtonPreviousDay1']").click(function(){return checkDate(1,-1);});
+      $("a[@id*='LinkButtonPreviousWeek1']").click(function(){return checkDate(1,-7);});
+      $("a[@id*='LinkButtonNextDay2']").click(function(){return checkDate(2,1);});
+      $("a[@id*='LinkButtonNextWeek2']").click(function(){return checkDate(2,7);});
+      $("a[@id*='LinkButtonPreviousDay2']").click(function(){return checkDate(2,-1);});
+      $("a[@id*='LinkButtonPreviousWeek2']").click(function(){return checkDate(2,-7);});
+      $("a[@id*='tab_']").click(function(){
+        var A=this.id.split("_");
+        var tabDate=new Date(A[2],A[3]-1,A[4]);
+        var dtime=new Date(), today=new Date(dtime.getFullYear(),dtime.getMonth(),dtime.getDate());
+        if(tabDate<=today){
+          alert(localization['bookToday']);
+          return false;
+        }
+        return true;
+      });
+      $(".avlLst table").find("div[@class^='planeImg'],input[@type='radio']").click(function(){selFlight(this);});
+
+      $(".avlLst table").each(function(){
+        var $flt=$("input[@type='radio'][@name*='market1']:enabled",this);
+        if($flt.size() > 0){
+          if(!$flt.is(':checked')) $flt.eq(0).attr({checked:true}).trigger("click");
+          else $flt.filter(':checked').trigger("click");
+        }
+      });
+    });
+    </script><div class="avlBlk" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><h2>Ida <span>A partir de Valladolid - Londres Stansted</span></h2><table><tr><td align="left" class="chgOff"><a id="AvailabilityInputFRSelectView_LinkButtonPreviousDay1" href="javascript:__doPostBack('AvailabilityInputFRSelectView$LinkButtonPreviousDay1','')">« Día anterior</a></td><td align="right" class="chgOn"><a id="AvailabilityInputFRSelectView_LinkButtonNextDay1" href="javascript:__doPostBack('AvailabilityInputFRSelectView$LinkButtonNextDay1','')">Día siguiente »</a></td></tr></table><div class="avlLst avlLst1"><p id="taxAndFeeInclusiveDivHeader1"><b>Seleccione un vuelo</b></p><div id="taxAndFeeInclusiveDivBody1" class="drilldown"><p class="hdr">Seleccione un vuelo</p></div><table><tr id="1_2009_2_29_13_10_00"><td><div class="planeImg1" title="Haga clic para seleccionar esta tarifa para este vuelo"></div></td><td>
+    <input requiredError="El vuelo de ida es obligatorio" id="AvailabilityInputFRSelectView_RadioButtonMkt1Fare1" type="radio" name="AvailabilityInputFRSelectView$market1" value="G~GCBW1501~WFPT~~RoundTo|FR~3125~ ~~VLL~03/29/2009 12:00~STN~03/29/2009 13:10" onclick="return raise('SelectFare', new SelectFareEventArgs(1, 1, 'G'))" required="True"></td><td>Regular Fare</td><td>Adulto<br></td><td align="right" style="font-size:110%;">0,00 EUR<br></td><td></td><td><b>Dom</b>, 29 Mar 09<br><b>Vuelo</b>FR 3125</td><td>12:00 Salida<br>13:10 Llegada</td></tr></table><div class="clr"></div></div></div><hr xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><div class="btnRight" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><input class="buttonRight" onClick="return validate(this) &amp;&amp; checkTimes() &amp;&amp; preventDoubleClick();" type="submit" name="AvailabilityInputFRSelectView$ButtonSubmit" value="Seleccionar y continuar" id="AvailabilityInputFRSelectView_ButtonSubmit"><p><label for="AvailabilityInputFRSelectView_ButtonSubmit">Seleccione sus vuelos y continúe</label><br><span>Si los vuelos deseados se han mostrado anteriormente, selecciónelos y haga clic en "Seleccionar y continuar".</span></p><div class="clr"></div></div><div class="btnRight" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt"><button id="NewSrch" class="button" onclick="&#xA;                  window.location='FRSearch.aspx';&#xA;                &#xA;          return false;&#xA;        ">Nueva búsqueda</button><p><label for="NewSrch">Regresar a la página de búsqueda</label><br><span>Si necesita vuelos distintos a los que se muestran arriba, realice una nueva búsqueda.</span></p><div class="clr"></div><style type="text/css">
+      .ad_header {color:#191970;font-weight:bold;font-size:13px}
+      .ad_line1 {color:#0066FF;font-size:15px; text-decoration:underline}
+      .ad_text {color:#191970;text-decoration:none}
+      .ad_url {color:#0000B6;fmargin-bottom:12px; text-decoration:none}
+      .narrow_ads {padding:5px;}
+      div.narrow_ads ul {margin: 0px; width: 100%; list-style: none;}
+      div.narrow_ads ul li {float: left; width: 33%; position: relative;}
+    </style><div id="narrow_ad_unit" class="section narrow_ads"></div><script type="text/javascript">
+      var pageculture='ES',
+      g_div_id='narrow_ad_unit',
+      g_channels={'DE':'1901616133','ES':'1730142402','FR':'4307283847','GB':'3975277388','IE':'0091594208','IT':'9330300293','NL':'6066899700','PL':'0911139945','SE':'1735271438','Other':'1974134150'};
+      if($(g_channels).size()==0) g_channels={'Other':''}; 
+      var google_afs_query='Londres Stansted Vuelo',
+      google_afs_ad='n3',
+      google_afs_client='pub-3031568651010206',
+      google_afs_channel=(g_channels[pageculture]!=undefined?g_channels[pageculture]:g_channels['Other']),
+      google_afs_hl='es',
+      google_afs_ie='utf8',
+      google_afs_oe='utf8',
+      google_afs_adtest=(window.location.hostname=='www.bookryanair.com')?'off':'on';
+    </script><script type="text/javascript" language="JavaScript" src="js/Ryanair/GoogleAdSense.js"></script><script type="text/javascript" language="JavaScript" src="http://www.google.com/afsonline/show_afs_ads.js"></script></div><div class="redbrd"><div><p><a href="javascript:infoWin('spn',0,0,'EN');"><img height="26" width="28" alt="Silla de ruedas. Haga clic para visualizar la información acerca de necesidades especiales en una ventana emergente." src="Images/Ryanair/icons/whlchr.gif"></a>Sólo podemos aceptar 4 pasajeros con movilidad reducida en cada vuelo. Todos los pasajeros con movilidad reducida deberían ponerse en contacto preferiblemente con el centro de reservas de Ryanair el día en que efectúan la reserva; de lo contrario, es posible que no puedan viajar. <a href="javascript:infoWin('spn',0,0,'EN');"><b>Haga clic aquí para obtener más información.</b></a></p><p><a href="javascript:infoWin('chd',0,0,'EN');"><img height="26" width="28" alt="Niños sin acompañante. Haga clic para obtener información sobre niños que viajan sin acompañante en una ventana emergente." src="Images/Ryanair/icons/unaccom.gif"></a>Ryanair no permite que niños menores de 14 años viajen sin acompañante. <a href="javascript:infoWin('chd',0,0,'EN');"><b>Consulte las restricciones al respecto.</b></a></p><p><a href="javascript:infoWin('inf',0,0,'EN');"><img height="26" width="28" alt="Bebé. Haga clic para obtener información sobre el transporte de bebés en una ventana emergente." src="Images/Ryanair/icons/infant.gif"></a>Información importante sobre el transporte de bebés de entre <a href="javascript:infoWin('inf',0,0,'EN');"><b>8 días y 23 meses de edad.</b></a></p><p><a href="javascript:infoWin('vimp',0,0,'EN');"><img height="26" width="28" alt="Pasajeros con dificultades de visión. Haga clic para visualizar la normativa para pasajeros con dificultades de visión." src="Images/Ryanair/icons/eye.gif"></a>Información importante para <a href="javascript:infoWin('vimp',0,0,'EN');"><b>pasajeros con dificultades de visión.</b></a></p></div></div></div></div><div class="clr"></div><div id="footer"><input type="hidden" id="language" value="ES"><input type="hidden" id="culture" value="ES"><script type="text/javascript">
+      xtnv = document;
+      xtsd = "http"+(window.location.protocol.indexOf('https:')==0?'s://logs152':'://logc158');
+      xtsite = "384235";
+      xtn2 = "6";
+      xtpage = "BookingProcess_ES::Select";
+      xtdi = "1";
+      
+      xt_multc = "&x1=1&x2=20090329&x3=20090329&x4=VLL&x5=STN&x6=1&x7=";
+      //do not modify below
+      if (window.xtparam!=null){window.xtparam+=xt_multc;}
+      else{window.xtparam = xt_multc};
+      </script><script type="text/javascript" src="js/Ryanair/xtcore.js"></script><noscript><img width="1" height="1" alt="" src="http://logc158.xiti.com/hit.xiti?s=384235&amp;s2=6&amp;p=BookingProcess_ES::Select&amp;di=1"></noscript><div id="fLinks"><a href="http://www.ryanair.com" title="Inicio">Inicio</a> | <a href="http://www.ryanair.com/site/ES/faqs.php" title="Preguntas frecuentes" target="_blank">Preguntas frecuentes</a> | <a href="http://www.ryanair.com/site/ES/conditions.php?view=privacy" title="Política de privacidad" target="_blank">Política de privacidad</a> | <a href="http://www.ryanair.com/site/ES/conditions.php" title="Termes i condicions de viatge" target="_blank">Termes i condicions de viatge</a> | <a href="http://www.ryanair.com/site/conditions/copywrite/doc.php?culture=ES" title="Condiciones de Uso de la Página Web" target="_blank">Condiciones de Uso de la Página Web</a> | <a href="http://www.ryanair.com/site/ES/faqs.php?sect=CONTACT&amp;div=int_sup" title="Información de contacto" target="_blank">Información de contacto</a></div><div id="copyr">Copyright 2008 Ryanair Ltd.</div></div></div><div class="clr"></div><script type="text/javascript">
+//
+var theForm = document.forms['SkySales'];
+if (!theForm) {
+    theForm = document.SkySales;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//
+
+</script><script language="javascript" type="text/javascript"><!-- 
+					var events = new Array();
+
+					function register(eventName, functionName)
+					{
+						if (eval(events[eventName]) == null)
+						{
+							events[eventName] = new Array();
+						}
+						events[eventName][events[eventName].length]	= functionName;
+					}
+
+					function raise(eventName, eventArgs)
+					{
+						var undefined;
+
+						if (events[eventName] != undefined)
+						{
+							for (var ix=0; ix<events[eventName].length; ix++)
+							{
+								if ( eval(events[eventName][ix] + "(eventArgs)") == false)
+								{
+									return false;
+								}
+							}
+						}
+						
+						return true;
+					}
+				// --></script><script language="javascript" type="text/javascript"><!-- 
+					function SelectFareEventArgs(marketIndex, fltIndex, classOfService)
+					{
+						this.paxFares	= marketPaxFares['mkt'+marketIndex+'|flt'+fltIndex+'|'+classOfService];
+						this.marketIndex = marketIndex;
+					}
+				// --></script><script language="javascript" type="text/javascript"><!-- 
+				function AvailabilityInputFRSelectView_Validate(eventArgs)
+				{
+
+					var dots;
+					var sel;
+					var numOfMkts = 1;
+					var msg = new Array	(
+				"", 
+
+					0 );
+
+					for (var i = 1; i <= numOfMkts; i++)
+					{
+						sel  = '';
+						dots = document['SkySales']["AvailabilityInputFRSelectView$market" + i];
+
+						if (dots == null) 
+						{
+							alert("");
+							return false;
+						}
+						else if (dots[0]) // array
+						{
+							for (var j = 0; j < dots.length; j++)
+							{
+								if (dots[j].checked)
+								{
+									sel = dots[j].value;
+									break;
+								}
+							}
+						}
+						else // single
+						{
+							if (dots.checked)
+							{
+								sel = dots.value;
+							}
+						}
+
+						if (sel == '')
+						{
+							alert(msg[i-1]);
+							return false;
+						}
+					}
+
+					return true;
+				}
+
+
+				function displayPopUpFareRule(classOfService, fareRuleKeys, paxTypes)
+				{
+					var url = '/skysales/FareRules.aspx?fareRuleKeys=' + fareRuleKeys +'&class=' + classOfService + '&paxTypes=' + paxTypes;
+
+					if (!window.fareRuleWindow || fareRuleWindow.closed)	// has not yet been defined
+					{
+						fareRuleWindow = window.open(url,'fareRule','width=250,height=251,toolbar=0,status=0,location=0,menubar=0,scrollbars=1,resizable=0');
+					}
+					else
+					{
+						fareRuleWindow.open(url,'fareRule','width=250,height=251,toolbar=0,status=0,location=0,menubar=0,scrollbars=1,resizable=0');
+						fareRuleWindow.focus();
+					}
+				}
+
+				// --></script><script language="javascript" type="text/javascript"><!-- 
+									function paxFare(paxTypeDesc,classDesc,fareRuleKey)
+									{
+										this.paxTypeDesc = paxTypeDesc;
+										this.classDesc = classDesc;
+										this.fareRuleKey = fareRuleKey;
+									}
+									var marketPaxFares = new Array();
+									
+					marketPaxFares['mkt1|flt1|G'] = new Array();
+					
+					        marketPaxFares['mkt1|flt1|G'][0] = new paxFare('Adult','Regular Fare','GCBW1501|G|FR|WFPT||es-ES');
+					        
+				// --></script><script language="javascript" type="text/javascript"><!-- 
+									function AvailabilityInputFRSelectView_initialize()
+									{
+				
+									} // end of Availability_initialize
+
+				// --></script><script type="text/javascript">
+//
+var RegisterFunctionsWithEvents =  new Array(register('Validate', 'AvailabilityInputFRSelectView_Validate'), register('WindowLoad', 'AvailabilityInputFRSelectView_initialize'));
+//
+</script></form><script language="javascript" type="text/javascript" xmlns:ms="urn:schemas-microsoft-com:xslt" xmlns:usr="urn:the-xml-files:xslt">
+          //defined in common.js
+          $(document).ready(function(){
+                WindowInitialize();
+          });
+    </script></body></html>

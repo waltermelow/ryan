@@ -1,0 +1,31 @@
+select origen, destino, date(fecha/1000, 'unixepoch'), precio from vuelos;
+
+drop table if exists vuelos;
+
+DELETE from vuelos WHERE 1;
+
+CREATE TABLE [vuelos] (
+	[vuelosKey] INTEGER  PRIMARY KEY NOT NULL,
+	[origen] TEXT  NULL,
+	[destino] TEXT  NULL,
+	[precio] TEXT  NULL,
+	[fecha] DATE  NULL,
+	[actualizado] DATE DEFAULT CURRENT_TIMESTAMP NULL
+	)
+	
+	
+	
+	
+	
+select * from vista2 where 
+(ORIGEN like '%Vallad%' or ORIGEN like '%Barcelona%' or ORIGEN like '%Alicante%' or ORIGEN like '%Madrid%') and
+(CAST(replace(precio, ',','.') AS REAL) < 25)
+order by cast(replace(precio,',','.') as real) 
+
+
+
+-- Fuente: http://ceroentrecero.com/como-borrar-registros-duplicados-de-sql-the-ultimate-solution/
+delete from Tabla1 where Id >
+(
+Select min(Id) from Tabla1 Tbl1 where Tabla1.Campo2 = Tbl1.Campo2 and Tabla1.Campo3 = Tbl1.Campo3
+)

@@ -1,0 +1,84 @@
+<HTML>
+
+<!-- ERROR SEGURAMENTE DEBIDO A SELECCIONAR UN DESTINO NO CORRESPONDIENTE CON EL ORIGEN -->
+
+  <HEAD>
+    <TITLE>
+      Ryanair - Error
+    </TITLE>
+    <META http-equiv=Content-Type content="text/html; charset=utf-8">
+    <SCRIPT src="/SkySales/js/Ryanair/jquery.js" type=text/javascript>
+    </SCRIPT>
+
+    <SCRIPT src="/SkySales/js/Ryanair/jquery.metaobjects.js" type=text/javascript>
+    </SCRIPT>
+
+    <SCRIPT src="/SkySales/js/Ryanair/common.js" type=text/javascript>
+    </SCRIPT>
+    <LINK 
+        href="css/Ryanair/Standard.css"
+        type=text/css
+        rel=stylesheet
+        xmlns:usr="urn:the-xml-files:xslt"
+        xmlns:ms="urn:schemas-microsoft-com:xslt">
+
+    <LINK 
+        href="css/Ryanair/datePicker.css"
+        type=text/css
+        rel=stylesheet
+        xmlns:usr="urn:the-xml-files:xslt"
+        xmlns:ms="urn:schemas-microsoft-com:xslt">
+
+    <SCRIPT 
+        language=javascript
+        type=text/javascript
+        xmlns:usr="urn:the-xml-files:xslt"
+        xmlns:ms="urn:schemas-microsoft-com:xslt">
+
+      Date.dayNames=['Sunday','Monday','Tuesday','Wednesday','Thusday','Friday','Saturday'];
+      Date.monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+      if (typeof jQuery != 'undefined') {
+        $.dpText={
+          TEXT_PREV_YEAR:'Previous year',
+          TEXT_PREV_MONTH:'Previous month',
+          TEXT_NEXT_YEAR:'Next year',
+          TEXT_NEXT_MONTH:'Next month',
+          TEXT_CLOSE:'Close',
+          TEXT_CHOOSE_DATE:' '
+        };
+      }
+      
+      var datePickerFormat='';
+      var datePickerDelimiter='';
+      Date.format=datePickerFormat;
+      //$.datePicker.setDateFormat(datePickerFormat, datePickerDelimiter);
+    </SCRIPT>
+</HEAD>
+<BODY><NOSCRIPT xmlns:usr="urn:the-xml-files:xslt" xmlns:ms="urn:schemas-microsoft-com:xslt"></NOSCRIPT>
+<FORM id=SkySales action=ErrorMessage.aspx method=post>
+<DIV><INPUT id=__VIEWSTATE type=hidden value=/wEPDwULLTE3MzUzNzUzMzVkZA== name=__VIEWSTATE></DIV>
+<DIV id=header>
+<DIV id=blu><A title="Ryanair.com Homepage" href="http://www.ryanair.com/"><IMG height=42 alt="" src="Images/Ryanair/logoyelbg.gif" width=228></A></DIV>
+<DIV id=yel>Error</DIV></DIV>
+<DIV id=body>
+<DIV id=wrapper>
+<DIV id=error></DIV>
+<DIV id=main>
+<H2>An Error Has Occurred</H2>
+<P class=red><LABEL id=errorBody>An error condition exists which is preventing you from continuing. You may wish to start over and try again.<BR>If you continue to get this error message, please contact the airline.</LABEL></P><BR><BR>
+<P>Additional details about the error:<BR>An error has occurred. Please try again.</P><BR><BR>
+<DIV class=btnRight>
+<P><INPUT class=Button onclick=javascript:history.go(-1); type=button value="Go Back">&nbsp;&nbsp; <INPUT class=Button onclick="location.href='Search.aspx'" type=button value="Start Over"></P>
+<DIV class=clr></DIV></DIV></DIV></DIV>
+<DIV class=clr></DIV>
+<DIV id=footer>
+<DIV id=fLinks></DIV>
+<DIV id=copyr>Copyright 2008 Ryanair Ltd.</DIV></DIV></DIV>
+<DIV class=clr></DIV></FORM>
+<SCRIPT language=javascript type=text/javascript xmlns:usr="urn:the-xml-files:xslt" xmlns:ms="urn:schemas-microsoft-com:xslt">
+          //defined in common.js
+          $(document).ready(function(){
+                WindowInitialize();
+          });
+    </SCRIPT>
+</BODY></HTML>
