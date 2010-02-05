@@ -1,9 +1,10 @@
 package ryanairScanner;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 
-public class Navegador extends Browser {
+public class Navegador extends org.eclipse.swt.browser.Browser {
 	private boolean ocupado= false;
 	private Vuelo vueloCapturando= null;
 	
@@ -26,5 +27,7 @@ public class Navegador extends Browser {
 	public boolean isVueloCapturando(Vuelo vueloCapturando) {
 		return vueloCapturando != null;
 	}
-
+	protected void checkSubclass() {
+	}
+	
 }
