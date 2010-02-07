@@ -26,21 +26,29 @@ import org.eclipse.swt.widgets.*;
 public class RyanairInspector2{
 
 	static final int ERROR_GENERICO = -99;
+	static final int ERROR_PASO_1 = -1;
 	static final int ERROR_PASO_2 = -2;
+	static final int ERROR_PASO_3 = -3;
+	static final int ERROR_PASO_4 = -4;
 	static final int OK_TODO = 5;
 	
+	static final int SIN_EMPEZAR = 0;
+	static final int FINALIZADO  = 4;
+	
 	boolean ocupado= false;
-	static int numPantalla = 0;
-	int hiloConsultas = 0;
 	String origenActual= "";
 	String destinoActual= "";
 	Calendar fechaActual;
 	
+	//VARIABLES DE CLASE:
+	private Vuelo vuelo;
+	private Navegador navegador;
+	private Table table;
+	private int numPantalla = 0;
+	
+	//private testThread testthread = new testThread();
 	private MotorJavascript motorJS = new MotorJavascript();
-//	private testThread testthread = new testThread();
-	
 
-	
 	//final static String rutaActual= "calculadora/";
 	//final static String rutaActual= System.getProperty("user.dir")+"\\bin\\calculadora\\";
 	//final static String rutaActual= System.getProperty("user.dir")+"\\"; //EL BUENO
@@ -55,9 +63,12 @@ public class RyanairInspector2{
 
 	
 	/*********************** CONSTRUCTOR *****************************/
-	public RyanairInspector2() {
-			
-
+	public RyanairInspector2(Navegador navegador, Vuelo vuelo, Table table) {
+		
+		this.vuelo= vuelo;
+		this.navegador= navegador;
+		this.numPantalla = 0;
+		this.table= table;
 		
         /*
 	    // Create producers
@@ -77,37 +88,83 @@ public class RyanairInspector2{
 	}
 
 	
+	
 	/******************************************************************/
-	protected boolean capturaVuelo(Browser brw, Table table, Vuelo vuelo) {
+	public boolean isFinalizadaCaptura() {
+		return (this.numPantalla == FINALIZADO) || (this.numPantalla < 0);
+	}
+	/******************************************************************/
+	public int getHiloConsultas() {
+		return numPantalla;
+	}
+
+	public void setHiloConsultas(int numPantalla) {
+		this.numPantalla = numPantalla;
+	}
+
+	/******************************************************************/
+	public Vuelo getVuelo() {
+		return vuelo;
+	}
+	public void setVuelo(Vuelo vuelo) {
+		this.vuelo = vuelo;
+	}
+
+	/******************************************************************/
+	public Navegador getNavegador() {
+		return navegador;
+	}
+	public void setNavegador(Navegador navegador) {
+		this.navegador = navegador;
+	}
+
+
+
+
+	/******************************************************************/
+	public boolean capturaVuelo() {
+		Table table= this.table;
+		Navegador brw= this.navegador;
+		Vuelo vuelo= this.vuelo;
+		
+		
 		boolean resultado = false;
 		String Origen= vuelo.getOrigen();
 		String Destino= vuelo.getDestino();
 		Calendar fecha= vuelo.getFecha();
 		
 		if(numPantalla==0){
+			brw.stop();
+			
 			if(!brw.setUrl("http://www.bookryanair.com/SkySales/FRSearch.aspx?culture=ES-ES&pos=HEAD")){
 				System.out.println("Error al caragar la página principal de busqueda de vuelos Ryanair.");
+				
+				vuelo.setProgreso(Vuelo.FINALIZADO);
+				this.vuelo= null;
 			}else{
 				numPantalla++;
+				vuelo.setProgreso(Vuelo.EN_PROGRESO);
 			}
-			System.out.println("Fin numPantalla = 0 con "+Destino);
+			System.out.println("Fin numPantalla = 0 con "+vuelo.toString());
 				
 		}
 		else if(numPantalla==1){
 			
 			if (!brw.execute(motorJS.componJS(Origen, Destino, fecha))) {
-				System.out.println("componJS.\n"+motorJS.componJS(Origen, Destino, fecha));
+				//System.out.println("componJS.\n"+motorJS.componJS(Origen, Destino, fecha));
 				System.out.println("ERROR: ejecutando el javascript de la selección del vuelo.");
+				vuelo.setProgreso(Vuelo.FINALIZADO);
 			}else if(!brw.execute(motorJS.getSubmit())){
 					System.out.println("ERROR: ejecutando el submit.");
 				}else{
 					//Se ha ejecutado CORRECTAMENTE
 					numPantalla++;
+					vuelo.setProgreso(Vuelo.EN_PROGRESO);
 					//Obtenemos los Calendar del fechas.txt con sus intervalos de fechas
 					//Llamamos a componJS por cada fecha
 					
 				}
-			System.out.println("Fin numPantalla = 1 con "+Destino);
+			System.out.println("Fin numPantalla = 1 con "+vuelo.toString());
 			
 			
 		}else if(numPantalla==2){
@@ -121,17 +178,21 @@ public class RyanairInspector2{
 				setFilaTable(table, new String[] { Origen, Destino,  UtilsFechas.getFechaEDDMMYYYY(fecha), "NO_VUELO" });
 				//TODO metemos en la db los dias sin vuelo?
 				//new String[] { "a", "b", "c", "d" }
+				vuelo.setProgreso(Vuelo.FINALIZADO);
+				this.vuelo= null;
 				System.out.println("NO HAY VUELO " +Origen+ " - " +Destino+ " el dia "+fecha.getTime());
 			}else {
 				//Si hay vuelo ese dia
 				String jsTemp = motorJS.getSubmit2();
 				if(!brw.execute(jsTemp)){
 					System.out.println("Error al ejecutar el submit de la pantalla: "+(numPantalla+1));
+					vuelo.setProgreso(Vuelo.FINALIZADO);
 				}else{
 					//Se ha ejecutado CORRECTAMENTE
 					numPantalla++;
+					vuelo.setProgreso(Vuelo.EN_PROGRESO);
 				}
-				System.out.println("Fin numPantalla = 2 con "+Destino);
+				System.out.println("Fin numPantalla = 2 con "+vuelo.toString());
 			}
 			
 		}else if(numPantalla==3){
@@ -162,15 +223,17 @@ public class RyanairInspector2{
 			//Informamos de errores
 			if(contador==0) System.out.println("ERROR: no se ha encontrado importe alguno en la página.");
 			else if(contador!=1) System.out.println("ERROR: se han encontrado más importes ("+m.groupCount()+") de los esperados en la página.");
-			
-			
-			//numPantalla++;
-			numPantalla= 0;
-			System.out.println("Fin PASOS numPantalla = 3 con "+Destino);
-			System.out.println("--------------------------------------");
+			else{
+				numPantalla++;
+				vuelo.setProgreso(Vuelo.FINALIZADO);
+				this.vuelo= null;
+				//numPantalla= 0;
+				System.out.println("Fin PASOS numPantalla = 3 con "+vuelo.toString());
+				System.out.println("--------------------------------------");
+			}
 			
 		}else{
-			brw.execute("alert('Completado paso "+numPantalla+"');");
+			brw.execute("alert('Completado paso EXTRA! "+numPantalla+"');");
 		}
 	
 		return resultado;

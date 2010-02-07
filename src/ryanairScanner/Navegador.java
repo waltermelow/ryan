@@ -24,7 +24,7 @@ public class Navegador extends org.eclipse.swt.browser.Browser {
 	public void setVueloCapturando(Vuelo vueloCapturando) {
 		this.vueloCapturando = vueloCapturando;
 	}
-	public boolean isVueloCapturando(Vuelo vueloCapturando) {
+	public boolean isVueloCapturando() {
 		return vueloCapturando != null;
 	}
 	protected void checkSubclass() {

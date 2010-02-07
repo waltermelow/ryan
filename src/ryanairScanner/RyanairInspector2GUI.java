@@ -41,7 +41,6 @@ public class RyanairInspector2GUI{
 
 	Display display; //= Display.getDefault();
 	private Shell shell;
-	ArrayList<Navegador> navegadores = new ArrayList<Navegador>();
 	private static Table table;
 	
 	final static String rutaActual= System.getProperty("user.dir")+"\\src\\ryanairScanner\\";
@@ -49,7 +48,9 @@ public class RyanairInspector2GUI{
 	final static int SIZE = 10000, NP = 1, NC = 3;
 	
 	static TreeSet<Vuelo> vuelos;
-	private RyanairInspector2 unvueloRyanair;
+	ArrayList<Navegador> navegadores = new ArrayList<Navegador>();
+	ArrayList<RyanairInspector2> ryanairCapturas = new ArrayList<RyanairInspector2>();
+	//private RyanairInspector2 unvueloRyanair;
 	
 	Buffer bufferVuelos = null;
 	Buffer bufferNavegadores = null;
@@ -65,15 +66,12 @@ public class RyanairInspector2GUI{
 	/*********************** CONSTRUCTOR *****************************/
 	public RyanairInspector2GUI() {
 		
-		bufferNavegadores = new Buffer(new CircularQueue(SIZE));
-		for (Navegador n : navegadores) {
-			bufferNavegadores.Put(n);
-		}
 		
-		bufferVuelos = new Buffer(new CircularQueue(SIZE));
 		System.out.println(rutaActual);
+		
 		System.out.println("-- Empieza lectura fichero --");
 		vuelos = UtilsIO.leerFicheroDatosConsultaVuelos(rutaActual + nomFichConsultas);
+		bufferVuelos = new Buffer(new CircularQueue(SIZE));
 		for (Vuelo v : vuelos) {
 			bufferVuelos.Put(v);
 			System.out.println(v.toString());
@@ -81,9 +79,14 @@ public class RyanairInspector2GUI{
 		System.out.println("-- Termina lectura fichero --");
 		
 		/*__ CREAMOS UNA INSTANCIA PARA CAPTURAR UN VUELO */
-		unvueloRyanair= new RyanairInspector2();
+		//unvueloRyanair= new RyanairInspector2();
 		
 		creaContenidos();
+		
+		bufferNavegadores = new Buffer(new CircularQueue(SIZE));
+		for (Navegador n : navegadores) {
+			bufferNavegadores.Put(n);
+		}
 		
 		//Iniciamos la carga de la pagina
 		iniciaCaptura(table); 
@@ -267,20 +270,20 @@ public class RyanairInspector2GUI{
 		itemT2.setControl(navegadores.get(0));//prueba18-6-09
 		//browser.setVisible(false);
 		
-		tabFolder.setBounds(0, 0, 766, 691);
-		tabFolder.pack();		
 
 		navegadores.add(new Navegador(tabFolder, SWT.BORDER));
 		navegadores.get(1).setBounds(0, 0, 787, 691);
 		itemT3.setControl(navegadores.get(1));
 
+		tabFolder.setBounds(0, 0, 766, 691);
+		tabFolder.pack();
 		
 		
 		//CADA VEZ!!! QUE TERMINE DE CARGAR
 		navegadores.get(0).addProgressListener(new ProgressAdapter() {
 			public void completed(ProgressEvent event) {
 				if(!postSubmit(navegadores.get(0), table)){
-					System.out.println("ERROR: Problema al ejecutar la gestion de los datos, finalizar la carga de la pagina.");
+					//System.out.println("ERROR: Problema al ejecutar la gestion de los datos, finalizar la carga de la pagina.");
 				}
 			}
 		});
@@ -289,7 +292,7 @@ public class RyanairInspector2GUI{
 		navegadores.get(1).addProgressListener(new ProgressAdapter() {
 			public void completed(ProgressEvent event) {
 				if(!postSubmit(navegadores.get(1), table)){
-					System.out.println("ERROR: Problema al ejecutar la gestion de los datos, finalizar la carga de la pagina.");
+					//System.out.println("ERROR: Problema al ejecutar la gestion de los datos, finalizar la carga de la pagina.");
 				}
 			}
 		});
@@ -406,20 +409,6 @@ public class RyanairInspector2GUI{
 	//Gestiona el evento Fin de la carga de la pagina del BROWSER
 	private boolean iniciaCaptura(Table table) {
 		
-		for (Vuelo v : vuelos) {
-			if(v.isSinEmpezar()){ //Interpretemos la marca de si se ha empezado o no a capturar este vuelo
-				boolean encontrado= false;
-				for (Iterator<Navegador> it = navegadores.iterator(); it.hasNext() && !encontrado;) {
-					Navegador n = (Navegador) it.next();
-					if(!n.isOcupado()){ //Si el navegador está libre
-						//unvueloRyanair.
-						//encontrado= true;
-					}
-					
-				}
-			}
-		}
-
 		/*
 		Vuelo v= (Vuelo)bufferVuelos.Get();
 		if(v != null){ //Si hay algun vuelo sin capturar
@@ -480,11 +469,49 @@ public class RyanairInspector2GUI{
 			System.out.println("brw stop 2");
 		}
 		*/
+		for (Iterator<Vuelo> it2 = vuelos.iterator(); it2.hasNext(); ) {
+			Vuelo v= (Vuelo) it2.next();
+			boolean encontrado= false;
+			if(v.isSinEmpezar()){ //Interpretemos la marca de si se ha empezado o no a capturar este vuelo
+				for (Iterator<Navegador> it = navegadores.iterator(); it.hasNext() && !encontrado; ) {
+					Navegador n= (Navegador) it.next();
+					if(!n.isOcupado()){ //Si el navegador está libre
+							n.setVueloCapturando(v);
+							n.setOcupado(true);
+							/*__ CREAMOS UNA INSTANCIA PARA CAPTURAR UN VUELO */
+							ryanairCapturas.add(new RyanairInspector2(n, v, table));
+							ryanairCapturas.get(ryanairCapturas.size()-1).capturaVuelo();
+							encontrado= true;
+						}
+					}
+			}
+		}
 		
 		return true;
 	}
 	
-	private boolean postSubmit(Navegador nvg, Table table) {
+	private boolean postSubmit(Navegador nav, Table table) {
+		boolean encontrado= false;
+		for (Iterator<RyanairInspector2> it=ryanairCapturas.iterator(); it.hasNext() && !encontrado;) {
+			RyanairInspector2 r= (RyanairInspector2) it.next();
+			if(r.getNavegador()!=null && nav.equals(r.getNavegador())){
+				
+				encontrado= true;
+				if(!r.isFinalizadaCaptura()){
+					//Si el vuelo ha empezado a capturarse PERO NO HA TERMINADO
+					r.capturaVuelo();
+					if(r.isFinalizadaCaptura()){
+						nav.setOcupado(false);
+						iniciaCaptura(table);
+					}
+				}else{
+					//Si el vuelo ha terminado de capturarse -> Empezamos capturar de nuevo
+					nav.setOcupado(false);
+					iniciaCaptura(table);
+				}
+			
+			}
+		}
 		return false;
 	}
 	
@@ -499,7 +526,18 @@ public class RyanairInspector2GUI{
 	 * 
 	 * */
 	
-	
+	/*
+	private void addCallbackPaginaCompleta(Navegador n, Table table) {
+		
+		n.addProgressListener(new ProgressAdapter() {
+			public void completed(ProgressEvent event) {
+				if(!postSubmit(n, table)){
+					System.out.println("ERROR: Problema al ejecutar la gestion de los datos, finalizar la carga de la pagina.");
+				}
+			}
+		});
+		
+	}*/
 	
 	
 }
