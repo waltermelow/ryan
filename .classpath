@@ -3,7 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="Workspace Eclipse/sqlitejdbc-v056.jar"/>
-	<classpathentry kind="lib" path="C:/Users/hp/Desktop/src.zip"/>
-	<classpathentry kind="lib" path="C:/Users/hp/Desktop/swt-debug.jar" sourcepath="C:/Users/hp/Desktop/src.zip"/>
+	<classpathentry kind="var" path="Workspace Eclipse/swt-debug.jar"/>
+	<classpathentry kind="var" path="Workspace Eclipse/src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

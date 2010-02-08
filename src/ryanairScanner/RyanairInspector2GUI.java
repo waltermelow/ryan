@@ -59,7 +59,26 @@ public class RyanairInspector2GUI{
 	/*****************************  M A I N  *************************************/
 	public static void main(String [] args) {
 		
-		RyanairInspector2GUI ryanairinspector2GUI= new RyanairInspector2GUI();
+		Thread t1= new Thread() {
+			public void run() {
+				try {
+					RyanairInspector2GUI ryanairinspector2GUI= new RyanairInspector2GUI();
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		t1.start();
+		Thread t2= new Thread() {
+		      public void run() {
+		        try {
+		        	RyanairInspector2GUI ryanairinspector2GUI2= new RyanairInspector2GUI();
+		        }catch (Exception e) {
+		          e.printStackTrace();
+		        }
+		      }
+		 };
+		 t2.start();
 		
 	}
 
@@ -502,11 +521,13 @@ public class RyanairInspector2GUI{
 					r.capturaVuelo();
 					if(r.isFinalizadaCaptura()){
 						nav.setOcupado(false);
+						ryanairCapturas.remove(r);
 						iniciaCaptura(table);
 					}
 				}else{
 					//Si el vuelo ha terminado de capturarse -> Empezamos capturar de nuevo
 					nav.setOcupado(false);
+					ryanairCapturas.remove(r);
 					iniciaCaptura(table);
 				}
 			

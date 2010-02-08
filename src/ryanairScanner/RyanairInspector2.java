@@ -30,7 +30,10 @@ public class RyanairInspector2{
 	static final int ERROR_PASO_2 = -2;
 	static final int ERROR_PASO_3 = -3;
 	static final int ERROR_PASO_4 = -4;
+	static final int ERROR_NO_VUELO = -98;
+	static final int ERROR_NO_IMPORTE_ENCONTRADO = -97;
 	static final int OK_TODO = 5;
+	
 	
 	static final int SIN_EMPEZAR = 0;
 	static final int FINALIZADO  = 4;
@@ -67,7 +70,7 @@ public class RyanairInspector2{
 		
 		this.vuelo= vuelo;
 		this.navegador= navegador;
-		this.numPantalla = 0;
+		this.numPantalla = SIN_EMPEZAR;
 		this.table= table;
 		
         /*
@@ -134,11 +137,13 @@ public class RyanairInspector2{
 		Calendar fecha= vuelo.getFecha();
 		
 		if(numPantalla==0){
-			brw.stop();
+			//brw.stop();
+			brw.clearSessions();
 			
 			if(!brw.setUrl("http://www.bookryanair.com/SkySales/FRSearch.aspx?culture=ES-ES&pos=HEAD")){
 				System.out.println("Error al caragar la página principal de busqueda de vuelos Ryanair.");
 				
+				this.numPantalla= ERROR_PASO_1;
 				vuelo.setProgreso(Vuelo.FINALIZADO);
 				this.vuelo= null;
 			}else{
@@ -152,9 +157,12 @@ public class RyanairInspector2{
 			
 			if (!brw.execute(motorJS.componJS(Origen, Destino, fecha))) {
 				//System.out.println("componJS.\n"+motorJS.componJS(Origen, Destino, fecha));
-				System.out.println("ERROR: ejecutando el javascript de la selección del vuelo.");
+				System.out.println("ERROR: ejecutando el javascript de la selección del vuelo "+vuelo);
+				this.numPantalla= ERROR_PASO_1;
 				vuelo.setProgreso(Vuelo.FINALIZADO);
 			}else if(!brw.execute(motorJS.getSubmit())){
+					this.numPantalla= ERROR_PASO_1;
+					vuelo.setProgreso(Vuelo.FINALIZADO);
 					System.out.println("ERROR: ejecutando el submit.");
 				}else{
 					//Se ha ejecutado CORRECTAMENTE
@@ -169,15 +177,14 @@ public class RyanairInspector2{
 			
 		}else if(numPantalla==2){
 			
-			Pattern pat= Pattern.compile("No hay vuelos");
+			Pattern pat= Pattern.compile("(No hay vuelos|there are no available flights)");
 			Matcher m= pat.matcher(brw.getText().replaceAll("[\r\n]", "")); //Le quitamos los retornos de carro, para que realice bien la busqueda
 			if(m.find()){
-				//Si NO hay vuelo ese dia
-				numPantalla= 0;
 				resultado= true;
 				setFilaTable(table, new String[] { Origen, Destino,  UtilsFechas.getFechaEDDMMYYYY(fecha), "NO_VUELO" });
 				//TODO metemos en la db los dias sin vuelo?
 				//new String[] { "a", "b", "c", "d" }
+				this.numPantalla= ERROR_NO_VUELO;
 				vuelo.setProgreso(Vuelo.FINALIZADO);
 				this.vuelo= null;
 				System.out.println("NO HAY VUELO " +Origen+ " - " +Destino+ " el dia "+fecha.getTime());
@@ -185,7 +192,8 @@ public class RyanairInspector2{
 				//Si hay vuelo ese dia
 				String jsTemp = motorJS.getSubmit2();
 				if(!brw.execute(jsTemp)){
-					System.out.println("Error al ejecutar el submit de la pantalla: "+(numPantalla+1));
+					System.out.println("Error al ejecutar el submit de la pantalla: 2");
+					this.numPantalla= ERROR_PASO_2;
 					vuelo.setProgreso(Vuelo.FINALIZADO);
 				}else{
 					//Se ha ejecutado CORRECTAMENTE
@@ -221,10 +229,14 @@ public class RyanairInspector2{
 			}
 			
 			//Informamos de errores
-			if(contador==0) System.out.println("ERROR: no se ha encontrado importe alguno en la página.");
-			else if(contador!=1) System.out.println("ERROR: se han encontrado más importes ("+m.groupCount()+") de los esperados en la página.");
-			else{
-				numPantalla++;
+			if(contador==0){
+				System.out.println("ERROR: no se ha encontrado importe alguno en la página.");
+				this.numPantalla= ERROR_NO_IMPORTE_ENCONTRADO;
+			}else if(contador!=1){
+				System.out.println("ERROR: se han encontrado más importes ("+m.groupCount()+") de los esperados en la página.");
+				this.numPantalla= ERROR_NO_IMPORTE_ENCONTRADO;
+			}else{
+				numPantalla++; //this.numPantalla= FINALIZADO;
 				vuelo.setProgreso(Vuelo.FINALIZADO);
 				this.vuelo= null;
 				//numPantalla= 0;
@@ -256,8 +268,13 @@ public class RyanairInspector2{
 
 	
 	private void setFilaTable(Table table ,String[] fila) {
-		TableItem elemento = new TableItem(table, SWT.NONE);
-		elemento.setText(fila);
+		TableItem elemento;
+		try {
+			elemento= new TableItem(table, SWT.NONE);
+			elemento.setText(fila);
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
 	}
 	
 
